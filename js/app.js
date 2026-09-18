@@ -9,14 +9,14 @@
   const NS = "http://www.w3.org/2000/svg";
   const svg = document.getElementById("cubeSvg");
 
-  const COL_W = 44, ROW_H = 42, STRIP_W = 46;
+  const COL_W = 50, ROW_H = 48, STRIP_W = 52;
   const U = 4 * COL_W;             // breedte rechterzijde (4 niveaus)
   const V = 5 * STRIP_W;           // breedte linkerzijde / diepte (5 lagen)
   const H = 5 * ROW_H;             // hoogte (5 activiteiten)
   const K = 0.866;
-  const cx = 324, cy = 531;        // scherm-positie van hoekpunt (0,0,0)
+  const cx = 301, cy = 545;        // scherm-positie van hoekpunt (0,0,0)
   const CENTER = { x: 500, y: 440 };
-  const R = 345;
+  const R = 358;
 
   let selectedLayer = M.layers[0].id;
 
@@ -51,14 +51,20 @@
     const p1 = polar(a1), p2 = polar(a2);
     return `M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} A ${R} ${R} 0 0 ${sweep} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
   };
-  const fitText = (t, max) => {
-    requestAnimationFrame(() => {
-      try {
-        const len = t.getComputedTextLength();
-        if (len > max) { t.setAttribute("textLength", max); t.setAttribute("lengthAdjust", "spacingAndGlyphs"); }
-      } catch (e) { /* niet zichtbaar */ }
-    });
+  // Tekst passend maken binnen een maximale breedte. Wordt opnieuw uitgevoerd zodra de
+  // webfont geladen is, omdat de fallback-font (vooral op Windows) breder meet.
+  const fitted = [];
+  const fitOne = ({ t, max }) => {
+    try {
+      t.removeAttribute("textLength"); t.removeAttribute("lengthAdjust");
+      const len = t.getComputedTextLength();
+      if (len > max) { t.setAttribute("textLength", max); t.setAttribute("lengthAdjust", "spacingAndGlyphs"); }
+    } catch (e) { /* niet zichtbaar */ }
   };
+  const fitText = (t, max) => { fitted.push({ t, max }); requestAnimationFrame(() => fitOne({ t, max })); };
+  const fitAll = () => fitted.forEach(fitOne);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(fitAll));
+  window.addEventListener("load", () => setTimeout(fitAll, 300));
   const tip = document.getElementById("tooltip");
   const wrap = document.getElementById("svgWrap");
   const hover = (g, getHtml, onEnter, onLeave) => {
@@ -110,7 +116,7 @@
   function drawCube() {
     const cube = el("g", { class: "cube" }, svg);
     // schaduw onder de kubus
-    el("ellipse", { cx: cx + K * (U + V) / 2 + 20, cy: cy + 0.5 * V + 24, rx: 220, ry: 42, fill: "rgba(0,0,0,.35)", filter: "url(#blur)" }, cube);
+    el("ellipse", { cx: cx + K * (U + V) / 2 + 20, cy: cy + 0.5 * V + 26, rx: 240, ry: 46, fill: "rgba(0,0,0,.35)", filter: "url(#blur)" }, cube);
     const defs = el("defs", {}, svg);
     const f = el("filter", { id: "blur", x: "-50%", y: "-50%", width: "200%", height: "200%" }, defs);
     el("feGaussianBlur", { stdDeviation: 14 }, f);
@@ -122,9 +128,9 @@
       const q = i * ROW_H;
       el("path", { d: `M 0 ${q} H ${V} V ${q + ROW_H} H 0 Z`, fill: a.color, stroke: "rgba(0,0,0,.35)", "stroke-width": 1, class: "fill" }, g);
       el("path", { d: `M 0 ${q + ROW_H - 4} H ${V} V ${q + ROW_H} H 0 Z`, fill: "rgba(0,0,0,.18)" }, g);
-      const t = el("text", { x: V / 2, y: q + 27, "text-anchor": "middle", fill: "#fff", "font-size": 18, "font-weight": 600 }, g);
+      const t = el("text", { x: V / 2, y: q + 31, "text-anchor": "middle", fill: "#fff", "font-size": 17, "font-weight": 600 }, g);
       t.textContent = a.name;
-      fitText(t, V - 24);
+      fitText(t, V - 56);
       g.dataset.act = a.id;
       clickable(g, "Activiteit " + a.name, () => openActivity(a.id));
       hover(g, () => `<b>${a.name}</b><small>Activiteit · klik voor de beschrijving en alle niveaus</small>`, () => hlActivity(a.id, true), () => hlActivity(a.id, false));
@@ -138,7 +144,7 @@
         const p = (lvl - 1) * COL_W, q = i * ROW_H;
         el("rect", { x: p, y: q, width: COL_W, height: ROW_H, fill: shade(a.color, 0.72), class: "cell" }, g);
         el("rect", { x: p, y: q, width: COL_W, height: 3, fill: "rgba(255,255,255,.18)" }, g);
-        const t = el("text", { x: p + COL_W / 2, y: q + 28, "text-anchor": "middle", fill: "#fff", "font-size": 21, "font-weight": 600 }, g);
+        const t = el("text", { x: p + COL_W / 2, y: q + 31, "text-anchor": "middle", fill: "#fff", "font-size": 20, "font-weight": 600 }, g);
         t.textContent = lvl;
         clickable(g, `${a.name}, beheersingsniveau ${lvl}`, () => openCell(a.id, lvl));
         hover(g, () => {
@@ -154,9 +160,9 @@
       const g = el("g", { class: "strip", "data-layer": l.id }, top);
       const q = i * STRIP_W;
       el("path", { d: `M 0 ${q} H ${U} V ${q + STRIP_W} H 0 Z`, fill: l.color, stroke: "rgba(0,0,0,.35)", "stroke-width": 1 }, g);
-      const t = el("text", { x: U / 2, y: q + 29, "text-anchor": "middle", fill: textColorOn(l.color), "font-size": 14, "font-weight": 600 }, g);
+      const t = el("text", { x: U / 2, y: q + 32, "text-anchor": "middle", fill: textColorOn(l.color), "font-size": 13.5, "font-weight": 600 }, g);
       t.textContent = l.name.toLowerCase();
-      fitText(t, U - 14);
+      fitText(t, U - 30);
       clickable(g, "Architectuurlaag " + l.name, () => { selectLayer(l.id); openLayer(l.id); });
       hover(g, () => `<b>${l.name}</b><small>Architectuurlaag · ${l.id === selectedLayer ? "geselecteerd" : "klik om te selecteren"}</small>`);
     });
@@ -199,7 +205,7 @@
   }
   function responsiveViewBox() {
     const mq = window.matchMedia("(max-width: 700px)");
-    const apply = () => svg.setAttribute("viewBox", mq.matches ? "250 200 520 520" : "130 70 740 740");
+    const apply = () => svg.setAttribute("viewBox", mq.matches ? "235 160 560 560" : "115 55 770 770");
     mq.addEventListener("change", apply);
     apply();
   }
