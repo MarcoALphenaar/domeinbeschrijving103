@@ -31,22 +31,44 @@
   <main>
     <section class="hero" id="kubus">
       <div class="hex-bg" aria-hidden="true"></div>
-      <div class="wrap hero-head">
-        <h1>Domeinbeschrijving</h1>
-        <p class="lede">Het HBO-i model in drie dimensies. Klik op een <b>architectuurlaag</b> (bovenkant), een <b>activiteit</b> (linkerkant) of een <b>beheersingsniveau</b> (rechterkant) van de kubus. De vier <b>aandachtsgebieden</b> met professional skills staan eromheen.</p>
-      </div>
+      <div class="wrap hero-grid">
+        <div class="hero-intro">
+          <h1>Domein&shy;beschrijving</h1>
+          <p class="lede">Het HBO-i model in drie dimensies. Klik op een vlak van de kubus of op een aandachtsgebied en lees precies wat de domeinbeschrijving daarover zegt.</p>
+        </div>
 
-      <div class="cube-stage">
-        <div class="layer-picker" role="group" aria-label="Geselecteerde architectuurlaag">
-          <span class="picker-label">Architectuurlaag</span>
-          <div class="chips" id="layerChips"></div>
+        <div class="hero-panels">
+          <div class="panel">
+            <div class="panel-title">Architectuurlaag</div>
+            <div class="chips" id="layerChips"></div>
+            <p class="panel-note">De gekozen laag bepaalt welke beroepstaken je ziet als je op een cijfer <b>1–4</b> klikt.</p>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">Zo lees je de kubus</div>
+            <ul class="legend" id="legend">
+              <li><button type="button" data-open="lagen"><i class="sw sw-top"></i><span><b>Bovenkant</b> architectuurlagen</span></button></li>
+              <li><button type="button" data-open="activiteiten"><i class="sw sw-left"></i><span><b>Linkerkant</b> activiteiten</span></button></li>
+              <li><button type="button" data-open="niveaus"><i class="sw sw-right"></i><span><b>Rechterkant</b> beheersingsniveaus 1–4</span></button></li>
+              <li><button type="button" data-open="beroepstaken"><i class="sw sw-in"></i><span><b>Inhoud</b> beroepstaken</span></button></li>
+            </ul>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">Aandachtsgebieden · professional skills</div>
+            <div class="chips skills" id="skillChips"></div>
+          </div>
         </div>
-        <div class="svg-wrap">
-          <svg id="cubeSvg" viewBox="0 0 1000 840" role="img" aria-labelledby="cubeTitle">
-            <title id="cubeTitle">Interactieve HBO-i kubus</title>
-          </svg>
+
+        <div class="cube-col">
+          <div class="svg-wrap" id="svgWrap">
+            <svg id="cubeSvg" viewBox="130 70 740 740" role="img" aria-labelledby="cubeTitle">
+              <title id="cubeTitle">Interactieve HBO-i kubus</title>
+            </svg>
+            <div class="tooltip" id="tooltip" role="status" aria-live="polite" hidden></div>
+          </div>
+          <p class="hint">Klik op een strook, een activiteit, een cijfer of een boog. Beweeg eroverheen voor een korte toelichting.</p>
         </div>
-        <p class="hint" id="hint">Tip: gebruik de chips hierboven of klik op een gekleurde strook bovenop de kubus om de architectuurlaag te kiezen. Klik daarna op een cijfer <b>1–4</b> voor de beroepstaken.</p>
       </div>
     </section>
 

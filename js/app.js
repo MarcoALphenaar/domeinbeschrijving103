@@ -51,6 +51,28 @@
     const p1 = polar(a1), p2 = polar(a2);
     return `M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} A ${R} ${R} 0 0 ${sweep} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
   };
+  const fitText = (t, max) => {
+    requestAnimationFrame(() => {
+      try {
+        const len = t.getComputedTextLength();
+        if (len > max) { t.setAttribute("textLength", max); t.setAttribute("lengthAdjust", "spacingAndGlyphs"); }
+      } catch (e) { /* niet zichtbaar */ }
+    });
+  };
+  const tip = document.getElementById("tooltip");
+  const wrap = document.getElementById("svgWrap");
+  const hover = (g, getHtml, onEnter, onLeave) => {
+    const move = e => {
+      const r = wrap.getBoundingClientRect();
+      tip.style.left = (e.clientX - r.left) + "px";
+      tip.style.top = (e.clientY - r.top) + "px";
+    };
+    g.addEventListener("mouseenter", e => { tip.innerHTML = getHtml(); tip.hidden = false; move(e); if (onEnter) onEnter(); });
+    g.addEventListener("mousemove", move);
+    g.addEventListener("mouseleave", () => { tip.hidden = true; if (onLeave) onLeave(); });
+  };
+  const hlActivity = (id, on) => svg.querySelectorAll(`[data-act="${id}"]`).forEach(n => n.classList.toggle("hl", on));
+  const countTasks = (layerId, actId, lvl) => (((T[layerId] || {})[actId] || {})[String(lvl)] || []).length;
   const clickable = (g, label, fn) => {
     g.setAttribute("tabindex", "0");
     g.setAttribute("role", "button");
@@ -58,28 +80,6 @@
     g.addEventListener("click", fn);
     g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } });
   };
-
-  // ---------- decoratieve kubusjes ----------
-  function drawDecor() {
-    const g = el("g", { class: "decor-layer", "aria-hidden": "true" }, svg);
-    const colors = ["#E5007D", "#F59A23", "#29A9E1", "#8DC63F", "#F4E01D", "#D71E3A", "#2D2E83"];
-    const pts = [
-      [40, 330], [120, 400], [80, 520], [150, 700], [230, 90], [260, 780], [400, 60], [640, 50], [760, 110],
-      [880, 200], [930, 380], [900, 560], [850, 720], [700, 800], [560, 810], [330, 150], [120, 620], [960, 120],
-      [40, 400], [760, 300], [860, 460], [200, 460], [660, 760], [420, 800]
-    ];
-    pts.forEach(([x, y], i) => {
-      const s = 7 + (i % 4) * 2.5;
-      const c = colors[i % colors.length];
-      const cube = el("g", { class: "deco", transform: `translate(${x} ${y})`, style: `animation-delay:${-(i * 0.7)}s` }, g);
-      const top = `M 0 ${-s} L ${s * K} ${-s / 2} L 0 0 L ${-s * K} ${-s / 2} Z`;
-      const left = `M ${-s * K} ${-s / 2} L 0 0 L 0 ${s} L ${-s * K} ${s / 2} Z`;
-      const right = `M ${s * K} ${-s / 2} L 0 0 L 0 ${s} L ${s * K} ${s / 2} Z`;
-      el("path", { d: top, fill: shade(c, 1.15), opacity: .9 }, cube);
-      el("path", { d: left, fill: shade(c, .75), opacity: .9 }, cube);
-      el("path", { d: right, fill: c, opacity: .9 }, cube);
-    });
-  }
 
   // ---------- aandachtsgebieden (bogen) ----------
   function drawArcs() {
@@ -102,6 +102,7 @@
       tp.textContent = skill.name.toUpperCase();
       clickable(hit, "Aandachtsgebied " + skill.name, () => openSkill(skill.id));
       hit.style.cursor = "pointer";
+      hover(hit, () => `<b>${skill.name}</b><small>Aandachtsgebied · ${skill.competencies.map(c => c[0]).join(", ")}</small>`);
     });
   }
 
@@ -119,11 +120,14 @@
     M.activities.forEach((a, i) => {
       const g = el("g", { class: "act" }, left);
       const q = i * ROW_H;
-      el("path", { d: `M 0 ${q} H ${V} V ${q + ROW_H} H 0 Z`, fill: a.color, stroke: "rgba(0,0,0,.35)", "stroke-width": 1 }, g);
+      el("path", { d: `M 0 ${q} H ${V} V ${q + ROW_H} H 0 Z`, fill: a.color, stroke: "rgba(0,0,0,.35)", "stroke-width": 1, class: "fill" }, g);
       el("path", { d: `M 0 ${q + ROW_H - 4} H ${V} V ${q + ROW_H} H 0 Z`, fill: "rgba(0,0,0,.18)" }, g);
-      const t = el("text", { x: V / 2, y: q + 27, "text-anchor": "middle", fill: "#fff", "font-size": 19, "font-weight": 600 }, g);
+      const t = el("text", { x: V / 2, y: q + 27, "text-anchor": "middle", fill: "#fff", "font-size": 18, "font-weight": 600 }, g);
       t.textContent = a.name;
+      fitText(t, V - 24);
+      g.dataset.act = a.id;
       clickable(g, "Activiteit " + a.name, () => openActivity(a.id));
+      hover(g, () => `<b>${a.name}</b><small>Activiteit · klik voor de beschrijving en alle niveaus</small>`, () => hlActivity(a.id, true), () => hlActivity(a.id, false));
     });
 
     // --- rechterzijde: beheersingsniveaus ---
@@ -132,11 +136,15 @@
       for (let lvl = 1; lvl <= 4; lvl++) {
         const g = el("g", { class: "face-cell", "data-act": a.id, "data-level": lvl }, right);
         const p = (lvl - 1) * COL_W, q = i * ROW_H;
-        el("rect", { x: p, y: q, width: COL_W, height: ROW_H, fill: shade(a.color, 0.72), stroke: "rgba(0,0,0,.45)", "stroke-width": 1 }, g);
+        el("rect", { x: p, y: q, width: COL_W, height: ROW_H, fill: shade(a.color, 0.72), class: "cell" }, g);
         el("rect", { x: p, y: q, width: COL_W, height: 3, fill: "rgba(255,255,255,.18)" }, g);
         const t = el("text", { x: p + COL_W / 2, y: q + 28, "text-anchor": "middle", fill: "#fff", "font-size": 21, "font-weight": 600 }, g);
         t.textContent = lvl;
         clickable(g, `${a.name}, beheersingsniveau ${lvl}`, () => openCell(a.id, lvl));
+        hover(g, () => {
+          const n = countTasks(selectedLayer, a.id, lvl);
+          return `<b>${a.name} · niveau ${lvl}</b>${layerById(selectedLayer).name}<br><small>${n ? n + (n === 1 ? " beroepstaak" : " beroepstaken") : "geen aparte beroepstaken"} · klik voor details</small>`;
+        }, () => hlActivity(a.id, true), () => hlActivity(a.id, false));
       }
     });
 
@@ -146,9 +154,11 @@
       const g = el("g", { class: "strip", "data-layer": l.id }, top);
       const q = i * STRIP_W;
       el("path", { d: `M 0 ${q} H ${U} V ${q + STRIP_W} H 0 Z`, fill: l.color, stroke: "rgba(0,0,0,.35)", "stroke-width": 1 }, g);
-      const t = el("text", { x: U / 2, y: q + 30, "text-anchor": "middle", fill: textColorOn(l.color), "font-size": 17, "font-weight": 600 }, g);
+      const t = el("text", { x: U / 2, y: q + 29, "text-anchor": "middle", fill: textColorOn(l.color), "font-size": 14, "font-weight": 600 }, g);
       t.textContent = l.name.toLowerCase();
+      fitText(t, U - 14);
       clickable(g, "Architectuurlaag " + l.name, () => { selectLayer(l.id); openLayer(l.id); });
+      hover(g, () => `<b>${l.name}</b><small>Architectuurlaag · ${l.id === selectedLayer ? "geselecteerd" : "klik om te selecteren"}</small>`);
     });
 
     // --- as-labels ---
@@ -158,6 +168,7 @@
       const t = el("text", { x, y, transform: `rotate(${rot} ${x} ${y})`, "text-anchor": anchor }, g);
       t.textContent = txt;
       clickable(g, txt, fn);
+      hover(g, () => `<b>${txt.charAt(0) + txt.slice(1).toLowerCase()}</b><small>Klik voor uitleg</small>`);
     };
     // ARCHITECTUURLAGEN: langs de rechterbovenrand van het bovenvlak
     label("ARCHITECTUURLAGEN", cx + K * (U + V / 2) + 12, cy - 0.5 * U + 0.25 * V - H - 20, 30, () => openOverview("lagen"));
@@ -176,6 +187,21 @@
       s.classList.toggle("dim", s.dataset.layer !== id);
     });
     document.querySelectorAll("#layerChips .chip").forEach(c => c.classList.toggle("active", c.dataset.layer === id));
+  }
+
+  function drawSkillChips() {
+    const box = document.getElementById("skillChips");
+    M.skills.forEach(k => box.append(h("button", { class: "chip", type: "button", style: `--c:${k.color}`, onclick: () => openSkill(k.id) }, [h("i"), k.name])));
+    document.querySelectorAll("#legend button").forEach(b => b.addEventListener("click", () => {
+      const k = b.dataset.open;
+      if (k === "niveaus") openLevels(); else openOverview(k);
+    }));
+  }
+  function responsiveViewBox() {
+    const mq = window.matchMedia("(max-width: 700px)");
+    const apply = () => svg.setAttribute("viewBox", mq.matches ? "250 200 520 520" : "130 70 740 740");
+    mq.addEventListener("change", apply);
+    apply();
   }
 
   function drawChips() {
@@ -303,10 +329,11 @@
     });
   }
 
-  drawDecor();
   drawArcs();
   drawCube();
   drawChips();
+  drawSkillChips();
+  responsiveViewBox();
   drawOverview();
   selectLayer(selectedLayer);
 })();
