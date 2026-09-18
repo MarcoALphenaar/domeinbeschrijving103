@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HBO-i Domeinbeschrijving – interactieve kubus</title>
+  <meta name="description" content="Interactieve versie van het HBO-i domeinmodel: klik op de kubus voor de beroepstaken per architectuurlaag, activiteit en beheersingsniveau.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,800;1,700;1,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 29 10v13L16 30 3 23V10z' fill='%231B75BC'/%3E%3Cpath d='M16 3v14L3 10z' fill='%232D2E83'/%3E%3Cpath d='M16 17v13l13-7V10z' fill='%23E5007D'/%3E%3Cpath d='M16 17 3 10v13l13 7z' fill='%23F59A23'/%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="#" aria-label="HBO-i">
+        <span class="brand-mark" aria-hidden="true">
+          <i style="--c:#2D2E83"></i><i style="--c:#E5007D"></i><i style="--c:#F59A23"></i><i style="--c:#29A9E1"></i><i style="--c:#8DC63F"></i><i style="--c:#F4E01D"></i>
+        </span>
+        <span class="brand-text">HBO<span>-</span>i</span>
+      </a>
+      <nav class="topnav" aria-label="Snel naar">
+        <a href="#kubus">Kubus</a>
+        <a href="#overzicht">Volledig overzicht</a>
+        <a href="https://www.hbo-i.nl/wp-content/uploads/2024/02/24040_HBOi_Domeinbeschrijving_NL.pdf" target="_blank" rel="noopener">Bron (PDF)</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="kubus">
+      <div class="hex-bg" aria-hidden="true"></div>
+      <div class="wrap hero-head">
+        <h1>Domeinbeschrijving</h1>
+        <p class="lede">Het HBO-i model in drie dimensies. Klik op een <b>architectuurlaag</b> (bovenkant), een <b>activiteit</b> (linkerkant) of een <b>beheersingsniveau</b> (rechterkant) van de kubus. De vier <b>aandachtsgebieden</b> met professional skills staan eromheen.</p>
+      </div>
+
+      <div class="cube-stage">
+        <div class="layer-picker" role="group" aria-label="Geselecteerde architectuurlaag">
+          <span class="picker-label">Architectuurlaag</span>
+          <div class="chips" id="layerChips"></div>
+        </div>
+        <div class="svg-wrap">
+          <svg id="cubeSvg" viewBox="0 0 1000 840" role="img" aria-labelledby="cubeTitle">
+            <title id="cubeTitle">Interactieve HBO-i kubus</title>
+          </svg>
+        </div>
+        <p class="hint" id="hint">Tip: gebruik de chips hierboven of klik op een gekleurde strook bovenop de kubus om de architectuurlaag te kiezen. Klik daarna op een cijfer <b>1–4</b> voor de beroepstaken.</p>
+      </div>
+    </section>
+
+    <section class="overview" id="overzicht">
+      <div class="wrap">
+        <h2>Volledig overzicht beroepstaken</h2>
+        <p class="muted">Alle exemplarische beroepstaken per architectuurlaag, activiteit en beheersingsniveau, letterlijk overgenomen uit de HBO-i Domeinbeschrijving (2024).</p>
+        <div id="overviewTables"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Bron: <a href="https://www.hbo-i.nl/wp-content/uploads/2024/02/24040_HBOi_Domeinbeschrijving_NL.pdf" target="_blank" rel="noopener">HBO-i Domeinbeschrijving, gewijzigde herdruk 2024</a> (Stichting HBO-i). Deze interactieve pagina is een studiehulpmiddel en geen officiële uitgave van HBO-i.</p>
+    </div>
+  </footer>
+
+  <dialog id="modal" class="modal" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <header class="modal-head">
+        <div class="modal-kicker" id="modalKicker"></div>
+        <h2 id="modalTitle"></h2>
+        <button class="close" id="modalClose" type="button" aria-label="Sluiten">×</button>
+      </header>
+      <div class="modal-body" id="modalBody"></div>
+      <footer class="modal-foot" id="modalFoot"></footer>
+    </div>
+  </dialog>
+
+  <script src="js/model.js"></script>
+  <script src="js/tasks.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
